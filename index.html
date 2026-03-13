@@ -487,6 +487,8 @@ body{font-family:'Nunito Sans',Arial,sans-serif;background:var(--bg);color:var(-
 .preview-detail span{color:var(--mgrey);font-weight:700}
 .svc-row{background:var(--bg);border-radius:6px;padding:10px 12px;display:flex;gap:8px;align-items:flex-end;border-left:3px solid var(--mgrey)}
 .state-field.hidden{display:none}
+.custom-field.hidden{display:none}
+.custom-field{margin-top:6px}
 </style>
 </head>
 <body>
@@ -620,26 +622,30 @@ body{font-family:'Nunito Sans',Arial,sans-serif;background:var(--bg);color:var(-
           </select>
         </div>
         <div class="field"><label>Delivery Time</label>
-          <select id="deliveryTime">
+          <select id="deliveryTime" onchange="toggleCustomField(this,'deliveryTimeCustom')">
             <option value="Within 2 weeks of confirmed PO">2 weeks</option>
             <option value="Within 4 weeks of confirmed PO" selected>4 weeks</option>
             <option value="Within 6 weeks of confirmed PO">6 weeks</option>
             <option value="Within 8 weeks of confirmed PO">8 weeks</option>
             <option value="Within 12 weeks of confirmed PO">12 weeks</option>
             <option value="To be confirmed">To be confirmed</option>
+            <option value="__custom__">Other…</option>
           </select>
+          <input type="text" id="deliveryTimeCustom" class="custom-field hidden" placeholder="Enter custom delivery time">
         </div>
       </div>
       <div class="field-row">
         <div class="field"><label>Payment Terms</label>
-          <select id="paymentTerms">
+          <select id="paymentTerms" onchange="toggleCustomField(this,'paymentTermsCustom')">
             <option value="100% advance payment">100% advance payment</option>
             <option value="50% advance, 50% before delivery">50% advance, 50% before delivery</option>
             <option value="Net 14 days">Net 14 days</option>
             <option value="Net 30 days" selected>Net 30 days</option>
             <option value="Net 45 days">Net 45 days</option>
             <option value="Net 60 days">Net 60 days</option>
+            <option value="__custom__">Other…</option>
           </select>
+          <input type="text" id="paymentTermsCustom" class="custom-field hidden" placeholder="Enter custom payment terms">
         </div>
         <div class="field"><label>Terms and Conditions URL</label><input type="text" id="termsUrl" value="Artome GTC, Warranty https://artome.fi/en/warranty/"></div>
       </div>
@@ -797,6 +803,17 @@ function applySeller(){
 function updateStateFields(){
   const show=currency==='USD';
   document.querySelectorAll('.state-field').forEach(el=>el.classList.toggle('hidden',!show));
+}
+
+function toggleCustomField(sel,customId){
+  const inp=document.getElementById(customId);
+  if(sel.value==='__custom__'){inp.classList.remove('hidden');inp.focus();}
+  else{inp.classList.add('hidden');inp.value='';}
+}
+function getFieldValue(selectId,customId){
+  const sel=document.getElementById(selectId);
+  if(sel.value==='__custom__')return document.getElementById(customId).value;
+  return sel.value;
 }
 
 // === IMAGE UPLOAD ===
@@ -1293,9 +1310,9 @@ async function generatePDF(){
 
   const termsUrl=document.getElementById('termsUrl').value;
   const deliveryIncoterm=document.getElementById('deliveryTerm').value;
-  const deliveryTime=document.getElementById('deliveryTime').value;
+  const deliveryTime=getFieldValue('deliveryTime','deliveryTimeCustom');
   const deliveryTermStr=deliveryIncoterm+(deliveryTime?', '+deliveryTime:'');
-  const paymentTerms=document.getElementById('paymentTerms').value;
+  const paymentTerms=getFieldValue('paymentTerms','paymentTermsCustom');
   const deliveryPairs=[
     ['Delivery Address',buildAddress('delivery')],
     ['Delivery Term',deliveryTermStr],
@@ -1418,7 +1435,7 @@ function getFormState(){
     'customerStreet','customerZip','customerCity','customerState',
     'taxRate','shippingPrice',
     'deliveryStreet','deliveryZip','deliveryCity','deliveryState',
-    'deliveryTerm','deliveryTime','paymentTerms','termsUrl','additionalNotes',
+    'deliveryTerm','deliveryTime','deliveryTimeCustom','paymentTerms','paymentTermsCustom','termsUrl','additionalNotes',
     'mainImageTitle','gridTitle','gridCap1','gridCap2','gridCap3','gridCap4','sellerEntity'];
   const state={};
   fields.forEach(f=>{const el=document.getElementById(f);if(el)state[f]=el.value;});
@@ -1436,9 +1453,12 @@ function setFormState(s){
     'customerStreet','customerZip','customerCity','customerState',
     'taxRate','shippingPrice',
     'deliveryStreet','deliveryZip','deliveryCity','deliveryState',
-    'deliveryTerm','deliveryTime','paymentTerms','termsUrl','additionalNotes',
+    'deliveryTerm','deliveryTime','deliveryTimeCustom','paymentTerms','paymentTermsCustom','termsUrl','additionalNotes',
     'mainImageTitle','gridTitle','gridCap1','gridCap2','gridCap3','gridCap4','sellerEntity'];
   fields.forEach(f=>{const el=document.getElementById(f);if(el&&s[f]!==undefined)el.value=s[f];});
+  // Show custom fields if "Other" was saved
+  if(s.deliveryTime==='__custom__')document.getElementById('deliveryTimeCustom').classList.remove('hidden');
+  if(s.paymentTerms==='__custom__')document.getElementById('paymentTermsCustom').classList.remove('hidden');
   if(s.includePage2!==undefined)document.getElementById('includePage2').checked=s.includePage2;
   if(s.currency)setCurrency(s.currency);
   if(s.productRows)productRows=s.productRows;
