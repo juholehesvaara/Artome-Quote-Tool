@@ -433,7 +433,7 @@ body{font-family:'Nunito Sans',Arial,sans-serif;background:var(--bg);color:var(-
 .main{display:grid;grid-template-columns:1fr 1fr;gap:24px;padding:24px;max-width:1600px;margin:0 auto;padding-bottom:80px}
 @media(max-width:1000px){.main{grid-template-columns:1fr}}
 .form-pane{display:flex;flex-direction:column;gap:16px}
-.preview-pane{position:sticky;top:60px;height:calc(100vh - 84px);overflow-y:auto;background:var(--white);border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,.08);padding:24px}
+.preview-pane{position:sticky;top:60px;height:calc(100vh - 84px);overflow:hidden;background:var(--white);border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,.08);padding:24px;display:flex;flex-direction:column}
 .section{background:var(--white);border-radius:8px;box-shadow:0 1px 6px rgba(0,0,0,.06);overflow:hidden}
 .section-header{background:var(--navy);color:var(--white);padding:10px 16px;font-weight:700;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none}
 .section-header .arrow{transition:transform .2s;font-size:12px}
@@ -474,17 +474,6 @@ body{font-family:'Nunito Sans',Arial,sans-serif;background:var(--bg);color:var(-
 .img-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 /* Preview */
 .preview-pane h2{font-size:14px;font-weight:900;color:var(--navy);margin-bottom:12px;padding-bottom:6px;border-bottom:2px solid var(--orange);display:inline-block}
-.preview-section{margin-bottom:16px}
-.preview-section h3{font-size:12px;font-weight:700;color:var(--navy);margin-bottom:6px;position:relative;padding-bottom:8px}
-.preview-section h3::after{content:'';position:absolute;bottom:0;left:0;width:40px;height:2px;background:var(--orange);border-radius:1px}
-.preview-table{width:100%;border-collapse:collapse;font-size:10px;margin-top:8px}
-.preview-table th{background:var(--bg);padding:4px 6px;text-align:left;font-weight:700;border-bottom:1px solid var(--dgrey);font-size:9px}
-.preview-table th:last-child,.preview-table td:last-child{text-align:right}
-.preview-table td{padding:3px 6px;border-bottom:1px solid var(--lgrey);font-size:10px}
-.preview-total{text-align:right;font-size:11px;margin-top:8px}
-.preview-total .grand{font-size:14px;font-weight:900;color:var(--navy)}
-.preview-detail{font-size:11px;color:var(--dgrey);margin:2px 0}
-.preview-detail span{color:var(--mgrey);font-weight:700}
 .svc-row{background:var(--bg);border-radius:6px;padding:10px 12px;display:flex;gap:8px;align-items:flex-end;border-left:3px solid var(--mgrey)}
 .state-field.hidden{display:none}
 .custom-field.hidden{display:none}
@@ -695,7 +684,8 @@ body{font-family:'Nunito Sans',Arial,sans-serif;background:var(--bg);color:var(-
 <!-- RIGHT: Preview -->
 <div class="preview-pane">
   <h2>Quote Preview</h2>
-  <div id="previewContent"></div>
+  <div id="previewLoading" style="display:none;text-align:center;padding:40px;color:#7f7f7f;font-size:13px;">Generating preview…</div>
+  <iframe id="pdfPreview" style="width:100%;flex:1;border:none;border-radius:4px;"></iframe>
 </div>
 </div>
 
@@ -934,44 +924,21 @@ function calcTotals(){
   return{subtotal,shipping,taxRate,tax,totalAfterTax};
 }
 
-// === LIVE PREVIEW ===
-function updatePreview(){
-  const t=calcTotals();
-  const name=document.getElementById('customerName').value||'—';
-  const company=document.getElementById('customerCompany').value;
-  const quoteName=document.getElementById('quoteName').value;
-  let h='<div class="preview-section"><h3>Quotation</h3>';
-  h+='<div class="preview-detail"><span>Date:</span> '+document.getElementById('quoteDate').value+'</div>';
-  if(company)h+='<div class="preview-detail"><span>Customer Company:</span> '+esc(company)+'</div>';
-  h+='<div class="preview-detail"><span>Customer Name:</span> '+esc(name)+'</div>';
-  if(quoteName)h+='<div class="preview-detail" style="margin-top:8px"><strong>Quote Name: '+esc(quoteName)+'</strong></div>';
-  h+='</div>';
-  if(productRows.length>0){
-    h+='<div class="preview-section"><table class="preview-table"><tr><th>SKU</th><th>Product</th><th>Cabinet</th><th>Door</th><th>Lens</th><th>Price</th><th>Qty</th><th>Subtotal</th></tr>';
-    productRows.forEach(r=>{
-      const nm=r.custom?(r.customName||'Custom'):(PRODUCTS[r.sku]?.name||'—');
-      const sku=r.custom?r.sku:(r.sku||'');
-      const price=calcRowPrice(r);
-      const sub=price*r.qty;
-      const pDisp=r.isFree?'FREE':fmtPriceVal(price);
-      const sDisp=r.isFree?'$ -':fmtPriceVal(sub);
-      h+=`<tr><td>${esc(sku)}</td><td>${esc(nm)}</td><td>${esc(r.cabinetColor)}</td><td>${esc(r.doorColor)}</td><td>${esc(r.lens)}</td><td>${pDisp}</td><td>${r.qty}</td><td>${sDisp}</td></tr>`;
-    });
-    h+='</table></div>';
-  }
-  h+='<div class="preview-total">';
-  h+='<div><span>Total Before Taxes: </span>'+fmtPriceVal(t.subtotal)+'</div>';
-  h+='<div><span>Sales Tax '+t.taxRate.toFixed(1)+'%: </span>'+fmtPriceVal(t.tax)+'</div>';
-  if(t.shipping>0)h+='<div><span>Shipping: </span>'+fmtPriceVal(t.shipping)+'</div>';
-  h+='<div class="grand">Total After Taxes: '+fmtPriceVal(t.totalAfterTax)+'</div>';
-  if(serviceRows.length>0&&serviceRows.some(r=>r.desc)){
-    h+='<div style="margin-top:8px;font-size:11px;font-weight:700">Optional Services</div>';
-    let svcSum=0;
-    serviceRows.forEach(r=>{if(r.desc){h+='<div style="font-size:10px">'+esc(r.desc)+': '+fmtPriceVal(r.price)+'</div>';svcSum+=r.price;}});
-    h+='<div class="grand" style="margin-top:4px">Total incl. Services: '+fmtPriceVal(t.totalAfterTax+svcSum)+'</div>';
-  }
-  h+='</div>';
-  document.getElementById('previewContent').innerHTML=h;
+// === LIVE PREVIEW (real PDF in iframe) ===
+let _prevBlobUrl=null;
+let _previewTimer;
+function debouncedPreview(){clearTimeout(_previewTimer);_previewTimer=setTimeout(updatePreview,800);}
+async function updatePreview(){
+  if(!window.jspdf)return;
+  const loading=document.getElementById('previewLoading');
+  loading.style.display='block';
+  try{
+    const doc=await buildPDF();
+    if(_prevBlobUrl)URL.revokeObjectURL(_prevBlobUrl);
+    _prevBlobUrl=doc.output('bloburi');
+    document.getElementById('pdfPreview').src=_prevBlobUrl;
+  }catch(e){console.error('Preview error:',e);}
+  finally{loading.style.display='none';}
 }
 
 // === PDF GENERATION ===
@@ -981,13 +948,21 @@ async function generatePDF(){
   if(!customerName){document.getElementById('customerName').classList.add('invalid');document.getElementById('customerName').focus();alert('Please enter a customer name.');return;}
   document.getElementById('customerName').classList.remove('invalid');
   if(productRows.length===0){alert('Please add at least one product.');return;}
+  const doc=await buildPDF();
+  const quoteName=document.getElementById('quoteName').value;
+  const fn='Artome-Quote-'+(quoteName||'Quote').replace(/[^a-zA-Z0-9]/g,'_')+'.pdf';
+  doc.save(fn);
+}
 
+// === BUILD PDF DOCUMENT ===
+async function buildPDF(){
   const{jsPDF}=window.jspdf;
   const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
   const W=210,H=297;
   const ML=15,MR=15;
   const CW=W-ML-MR;
   const seller=SELLERS[document.getElementById('sellerEntity').value]||SELLERS['artome-oy'];
+  const customerName=document.getElementById('customerName').value.trim();
   const totals=calcTotals();
   const FOOTER_Y=H-22;
   const SAFE_Y=FOOTER_Y-4;
@@ -1423,9 +1398,7 @@ async function generatePDF(){
     drawFooter(p);
   }
 
-  // Save
-  const fn='Artome-Quote-'+(quoteName||'Quote').replace(/[^a-zA-Z0-9]/g,'_')+'.pdf';
-  doc.save(fn);
+  return doc;
 }
 
 // === LOCALSTORAGE ===
@@ -1494,8 +1467,8 @@ document.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('topbar-logo').src=LOGO_BLACK_B64;
   initDefaults();
   document.querySelectorAll('input,select,textarea').forEach(el=>{
-    el.addEventListener('input',updatePreview);
-    el.addEventListener('change',updatePreview);
+    el.addEventListener('input',debouncedPreview);
+    el.addEventListener('change',debouncedPreview);
   });
   let ast;document.addEventListener('input',()=>{clearTimeout(ast);ast=setTimeout(()=>{localStorage.setItem('artome-quote-v2',JSON.stringify(getFormState()));},3000);});
   window.addEventListener('beforeunload',e=>{if(productRows.length>0||document.getElementById('customerName').value){e.preventDefault();e.returnValue='';}});
