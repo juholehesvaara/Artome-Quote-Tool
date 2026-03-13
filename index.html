@@ -1260,20 +1260,29 @@ async function generatePDF(){
   drawLaserline(ML,y+2.5,ddW);
   y+=10;
 
+  const termsUrl=document.getElementById('termsUrl').value;
   const deliveryPairs=[
     ['Delivery Address',buildAddress('delivery')],
     ['Delivery Term',document.getElementById('deliveryTerm').value],
     ['Quote Expiration',document.getElementById('expirationDate').value?'This Quote will expire on '+formatDateShort(document.getElementById('expirationDate').value)+'.':''],
+    ['Terms & Conditions',termsUrl],
   ];
   deliveryPairs.forEach(([label,val])=>{
     if(!val)return;
     ensureSpace(8);
     doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(...C.NAVY);
     doc.text(label,ML,y);
-    doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(...C.DGREY);
-    const valLines=doc.splitTextToSize(val,CW-45);
-    doc.text(valLines,ML+42,y);
-    y+=Math.max(valLines.length*4,5)+2;
+    doc.setFont('helvetica','normal');doc.setFontSize(8);
+    if(label==='Terms & Conditions'&&(val.startsWith('http')||val.startsWith('www'))){
+      doc.setTextColor(0,80,180);
+      const url=val.startsWith('http')?val:'https://'+val;
+      doc.textWithLink(val,ML+42,y,{url:url});
+    } else {
+      doc.setTextColor(...C.DGREY);
+      const valLines=doc.splitTextToSize(val,CW-45);
+      doc.text(valLines,ML+42,y);
+    }
+    y+=5+2;
   });
 
   // Additional notes
@@ -1287,25 +1296,6 @@ async function generatePDF(){
     const nl=doc.splitTextToSize(notes,CW-45);
     doc.text(nl,ML+42,y);
     y+=nl.length*4+2;
-  }
-
-  // ============================================
-  // Terms & Conditions page
-  // ============================================
-  const termsUrl=document.getElementById('termsUrl').value;
-  if(termsUrl){
-    newPage();
-    let ty=20;
-    doc.setFont('helvetica','bold');doc.setFontSize(16);doc.setTextColor(...C.NAVY);
-    doc.text('Terms and Conditions',ML,ty);
-    drawLaserline(ML,ty+2.5,doc.getTextWidth('Terms and Conditions'));
-    ty+=12;
-    doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(...C.DGREY);
-    const termsLines=doc.splitTextToSize(termsUrl,CW);
-    doc.text(termsLines,ML,ty);
-    ty+=termsLines.length*4.5+8;
-    doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(...C.MGREY);
-    doc.text('Please refer to the link above for full terms, conditions, and warranty information.',ML,ty);
   }
 
   // ============================================
