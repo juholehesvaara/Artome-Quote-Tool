@@ -18,8 +18,8 @@ body{font-family:'Nunito Sans',Arial,sans-serif;background:var(--bg);color:var(-
 .topbar h1{font-weight:900;font-size:18px;color:var(--navy);letter-spacing:.5px}
 .main{display:grid;grid-template-columns:1fr 1fr;gap:24px;padding:24px;flex:1;min-height:0;overflow:hidden}
 @media(max-width:1000px){.main{grid-template-columns:1fr}body{overflow:auto;display:block;height:auto}html{overflow:auto;height:auto}.main{flex:none;min-height:auto;overflow:visible}.form-pane,.preview-pane{height:auto;overflow:visible}.action-bar{position:sticky;bottom:0}}
-.form-pane{display:flex;flex-direction:column;gap:16px;overflow-y:auto;height:100%;padding-bottom:16px}
-.preview-pane{overflow-y:auto;height:100%;background:var(--white);border-radius:8px;border:1px solid var(--lgrey);padding:24px}
+.form-pane{display:flex;flex-direction:column;gap:16px;overflow-y:auto;height:100%;padding-bottom:16px;contain:content}
+.preview-pane{overflow-y:auto;height:100%;background:var(--white);border-radius:8px;border:1px solid var(--lgrey);padding:24px;contain:content}
 .section{background:var(--white);border-radius:8px;border:1px solid var(--lgrey);overflow:hidden}
 .section-header{background:var(--navy);color:var(--white);padding:10px 16px;font-weight:700;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none}
 .section-header .arrow{transition:transform .2s;font-size:12px}
@@ -62,7 +62,7 @@ body{font-family:'Nunito Sans',Arial,sans-serif;background:var(--bg);color:var(-
 .preview-pane h2{font-size:14px;font-weight:900;color:var(--navy);margin-bottom:12px;padding-bottom:6px;border-bottom:2px solid var(--orange);display:inline-block}
 .preview-section{margin-bottom:16px}
 .preview-section h3{font-size:12px;font-weight:700;color:var(--navy);margin-bottom:6px;position:relative;padding-bottom:8px}
-.preview-section h3::after{content:'';position:absolute;bottom:0;left:0;width:40px;height:2px;background:var(--orange);border-radius:1px}
+.preview-section h3::after{content:'';position:absolute;bottom:0;left:0;width:40px;height:2px;background:var(--orange)}
 .preview-table{width:100%;border-collapse:collapse;font-size:10px;margin-top:8px}
 .preview-table th{background:var(--bg);padding:4px 6px;text-align:left;font-weight:700;border-bottom:1px solid var(--dgrey);font-size:9px}
 .preview-table th:last-child,.preview-table td:last-child{text-align:right}
