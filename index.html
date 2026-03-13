@@ -607,10 +607,41 @@ body{font-family:'Nunito Sans',Arial,sans-serif;background:var(--bg);color:var(-
         <div class="field state-field"><label>State</label><input type="text" id="deliveryState" placeholder="e.g. CA"></div>
       </div>
       <div class="field-row">
-        <div class="field" style="flex:2"><label>Delivery Term and Time</label><input type="text" id="deliveryTerm" value="DDP, within 4 weeks of the confirmed Purchase Order."></div>
+        <div class="field"><label>Delivery Term (Incoterm)</label>
+          <select id="deliveryTerm">
+            <option value="DDP">DDP — Delivered Duty Paid</option>
+            <option value="DAP">DAP — Delivered at Place</option>
+            <option value="CIF">CIF — Cost, Insurance & Freight</option>
+            <option value="FOB">FOB — Free on Board</option>
+            <option value="EXW">EXW — Ex Works</option>
+            <option value="FCA">FCA — Free Carrier</option>
+            <option value="CPT">CPT — Carriage Paid To</option>
+            <option value="CIP">CIP — Carriage & Insurance Paid To</option>
+          </select>
+        </div>
+        <div class="field"><label>Delivery Time</label>
+          <select id="deliveryTime">
+            <option value="Within 2 weeks of confirmed PO">2 weeks</option>
+            <option value="Within 4 weeks of confirmed PO" selected>4 weeks</option>
+            <option value="Within 6 weeks of confirmed PO">6 weeks</option>
+            <option value="Within 8 weeks of confirmed PO">8 weeks</option>
+            <option value="Within 12 weeks of confirmed PO">12 weeks</option>
+            <option value="To be confirmed">To be confirmed</option>
+          </select>
+        </div>
       </div>
       <div class="field-row">
-        <div class="field" style="flex:2"><label>Terms and Conditions URL</label><input type="text" id="termsUrl" value="Artome GTC, Warranty https://artome.fi/en/warranty/"></div>
+        <div class="field"><label>Payment Terms</label>
+          <select id="paymentTerms">
+            <option value="100% advance payment">100% advance payment</option>
+            <option value="50% advance, 50% before delivery">50% advance, 50% before delivery</option>
+            <option value="Net 14 days">Net 14 days</option>
+            <option value="Net 30 days" selected>Net 30 days</option>
+            <option value="Net 45 days">Net 45 days</option>
+            <option value="Net 60 days">Net 60 days</option>
+          </select>
+        </div>
+        <div class="field"><label>Terms and Conditions URL</label><input type="text" id="termsUrl" value="Artome GTC, Warranty https://artome.fi/en/warranty/"></div>
       </div>
       <div class="field">
         <label>Additional Notes (bold in PDF)</label>
@@ -1261,9 +1292,14 @@ async function generatePDF(){
   y+=10;
 
   const termsUrl=document.getElementById('termsUrl').value;
+  const deliveryIncoterm=document.getElementById('deliveryTerm').value;
+  const deliveryTime=document.getElementById('deliveryTime').value;
+  const deliveryTermStr=deliveryIncoterm+(deliveryTime?', '+deliveryTime:'');
+  const paymentTerms=document.getElementById('paymentTerms').value;
   const deliveryPairs=[
     ['Delivery Address',buildAddress('delivery')],
-    ['Delivery Term',document.getElementById('deliveryTerm').value],
+    ['Delivery Term',deliveryTermStr],
+    ['Payment Terms',paymentTerms],
     ['Quote Expiration',document.getElementById('expirationDate').value?'This Quote will expire on '+formatDateShort(document.getElementById('expirationDate').value)+'.':''],
     ['Terms & Conditions',termsUrl],
   ];
@@ -1382,7 +1418,7 @@ function getFormState(){
     'customerStreet','customerZip','customerCity','customerState',
     'taxRate','shippingPrice',
     'deliveryStreet','deliveryZip','deliveryCity','deliveryState',
-    'deliveryTerm','termsUrl','additionalNotes',
+    'deliveryTerm','deliveryTime','paymentTerms','termsUrl','additionalNotes',
     'mainImageTitle','gridTitle','gridCap1','gridCap2','gridCap3','gridCap4','sellerEntity'];
   const state={};
   fields.forEach(f=>{const el=document.getElementById(f);if(el)state[f]=el.value;});
@@ -1400,7 +1436,7 @@ function setFormState(s){
     'customerStreet','customerZip','customerCity','customerState',
     'taxRate','shippingPrice',
     'deliveryStreet','deliveryZip','deliveryCity','deliveryState',
-    'deliveryTerm','termsUrl','additionalNotes',
+    'deliveryTerm','deliveryTime','paymentTerms','termsUrl','additionalNotes',
     'mainImageTitle','gridTitle','gridCap1','gridCap2','gridCap3','gridCap4','sellerEntity'];
   fields.forEach(f=>{const el=document.getElementById(f);if(el&&s[f]!==undefined)el.value=s[f];});
   if(s.includePage2!==undefined)document.getElementById('includePage2').checked=s.includePage2;
