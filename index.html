@@ -505,6 +505,7 @@ body{font-family:'Nunito Sans',Arial,sans-serif;background:var(--bg);color:var(-
           <div class="currency-toggle">
             <button id="btnEUR" class="active" onclick="setCurrency('EUR')">EUR</button>
             <button id="btnUSD" onclick="setCurrency('USD')">USD</button>
+            <button id="btnGBP" onclick="setCurrency('GBP')">GBP</button>
           </div>
         </div>
       </div>
@@ -747,23 +748,23 @@ let uploadedImages={mainImage:null,gridImg1:null,gridImg2:null,gridImg3:null,gri
 // === UTILITY ===
 function fmtPrice(val){
   const n=Number(val)||0;
-  if(n===0&&productRows.some(r=>calcRowPrice(r)===0)) return currency==='USD'?'FREE':'FREE';
-  if(currency==='USD'){
-    return '$'+n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');
-  } else {
-    const parts=n.toFixed(2).split('.');
-    return parts[0].replace(/\B(?=(\d{3})+(?!\d))/g,'\u00A0')+','+parts[1]+' EUR';
-  }
+  if(n===0&&productRows.some(r=>calcRowPrice(r)===0)) return 'FREE';
+  if(currency==='USD') return '$'+n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+  if(currency==='GBP') return '\u00A3'+n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+  const parts=n.toFixed(2).split('.');
+  return parts[0].replace(/\B(?=(\d{3})+(?!\d))/g,'\u00A0')+','+parts[1]+' EUR';
 }
 function fmtPriceVal(val){
   const n=Number(val)||0;
   if(currency==='USD') return '$'+n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+  if(currency==='GBP') return '\u00A3'+n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');
   const parts=n.toFixed(2).split('.');
   return parts[0].replace(/\B(?=(\d{3})+(?!\d))/g,'\u00A0')+','+parts[1]+' EUR';
 }
 function fmtPricePdf(val){
   const n=Number(val)||0;
   if(currency==='USD') return '$ '+n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+  if(currency==='GBP') return '\u00A3 '+n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');
   const parts=n.toFixed(2).split('.');
   return parts[0].replace(/\B(?=(\d{3})+(?!\d))/g,' ')+','+parts[1]+' EUR';
 }
@@ -779,6 +780,7 @@ function setCurrency(c){
   currency=c;
   document.getElementById('btnEUR').classList.toggle('active',c==='EUR');
   document.getElementById('btnUSD').classList.toggle('active',c==='USD');
+  document.getElementById('btnGBP').classList.toggle('active',c==='GBP');
   updateStateFields();
   renderProductRows();updatePreview();
 }
